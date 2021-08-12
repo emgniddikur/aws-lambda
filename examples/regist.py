@@ -36,6 +36,17 @@ def lambda_handler(event, context):
 
         host = event['requestContext']['http']['sourceIp']
 
+        s3 = boto3.client('s3')
+        url = s3.generate_presigned_url(
+            ClientMethod='get_object',
+            Params={
+                'Bucket': 'secret-contents-1234',
+                'Key': 'secret.jpeg'
+            },
+            ExpiresIn=48 * 60 * 60,
+            HttpMethod='GET'
+        )
+
         usertable = dynamodb.Table('user')
         usertable.put_item(
             Item={
@@ -43,7 +54,8 @@ def lambda_handler(event, context):
                 'username': username,
                 'email': email,
                 'accepted_at': decimal.Decimal(str(now)),
-                'host': host
+                'host': host,
+                'url': url
             }
         )
 
